@@ -1,0 +1,28 @@
+:root {
+    --glass-white: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+.glass {
+    background: var(--glass-white);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+}
+
+.dark .glass {
+    background: rgba(30, 35, 41, 0.7);
+    border: 1px solid rgba(71, 77, 87, 0.3);
+}
+
+body {
+    overflow-x: hidden;
+}
+
+.animate-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

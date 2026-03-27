@@ -22,7 +22,7 @@ async function startApp() {
     displayGlobalStats();
 
     await getCoinsData();
-    console.log('Markets data loaded');
+    displayCoinsTable();
 }
 
 async function getGlobalData() {
@@ -31,7 +31,7 @@ async function getGlobalData() {
         const json = await res.json();
         globalStats = json.data;
     } catch (err) {
-        console.log('Error fetching global data:', err);
+        console.log('Error:', err);
     }
 }
 
@@ -42,8 +42,57 @@ async function getCoinsData() {
         coinsList = data;
         filteredList = [...data];
     } catch (err) {
-        console.log('Error fetching coins data:', err);
+        console.log('Error:', err);
     }
+}
+
+function displayCoinsTable() {
+    const tableBody = document.getElementById('coin-table-body');
+    if (!tableBody) return;
+
+    let rowsHtml = '';
+    for (let i = 0; i < filteredList.length; i++) {
+        let coin = filteredList[i];
+        const percentChange = coin.price_change_percentage_24h || 0;
+        const up = percentChange >= 0;
+
+        rowsHtml += `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors group">
+                <td class="p-6 text-sm font-bold text-slate-400">#${coin.market_cap_rank}</td>
+                <td class="p-6">
+                    <div class="flex items-center gap-4">
+                        <img src="${coin.image}" class="w-10 h-10 rounded-2xl border border-slate-200 dark:border-slate-800 p-0.5" alt="${coin.name}">
+                        <div>
+                            <div class="font-extrabold text-slate-900 dark:text-white">${coin.name}</div>
+                            <div class="text-[10px] text-slate-500 uppercase font-black tracking-widest">${coin.symbol}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="p-6 font-mono font-bold text-slate-900 dark:text-white">$${getPriceString(coin.current_price)}</td>
+                <td class="p-6 text-right">
+                    <span class="inline-flex items-center font-black ${up ? 'text-secondary' : 'text-danger'} font-mono">
+                        <i data-lucide="${up ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4 mr-1"></i>
+                        ${Math.abs(percentChange).toFixed(2)}%
+                    </span>
+                </td>
+                <td class="p-6 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400">
+                            <i data-lucide="star" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+    tableBody.innerHTML = rowsHtml;
+    lucide.createIcons();
+}
+
+function getPriceString(p) {
+    if (!p) return '0.00';
+    if (p >= 1) return p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return p.toFixed(6);
 }
 
 function displayGlobalStats() {

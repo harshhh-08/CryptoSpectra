@@ -75,7 +75,12 @@ function displayCoinsTable() {
                         ${Math.abs(percentChange).toFixed(2)}%
                     </span>
                 </td>
-                <td class="p-6 text-center">
+                <td class="p-6">
+                    <div class="w-24 h-10 mx-auto">
+                        ${getSparklineSvg(coin.sparkline_in_7d.price, up)}
+                    </div>
+                </td>
+                <td class="p-6">
                     <div class="flex items-center justify-center gap-2">
                         <button class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400">
                             <i data-lucide="star" class="w-5 h-5"></i>
@@ -87,6 +92,28 @@ function displayCoinsTable() {
     }
     tableBody.innerHTML = rowsHtml;
     lucide.createIcons();
+}
+
+function getSparklineSvg(prices, up) {
+    const minVal = Math.min(...prices);
+    const maxVal = Math.max(...prices);
+    let valRange = maxVal - minVal;
+    if (valRange === 0) valRange = 1;
+
+    let pathPoints = '';
+    for (let i = 0; i < prices.length; i++) {
+        const x = (i / (prices.length - 1)) * 100;
+        const y = 40 - ((prices[i] - minVal) / valRange) * 40;
+        pathPoints += `${x},${y} `;
+    }
+
+    const strokeColor = up ? '#0ECB81' : '#F6465D';
+
+    return `
+        <svg viewBox="0 0 100 40" class="overflow-visible">
+            <polyline fill="none" stroke="${strokeColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${pathPoints}" />
+        </svg>
+    `;
 }
 
 function getPriceString(p) {

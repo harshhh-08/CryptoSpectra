@@ -2,6 +2,7 @@ let coinsList = [];
 let filteredList = [];
 let globalStats = null;
 let currentTheme = localStorage.getItem('crypto_theme') || 'dark';
+let searchText = '';
 
 const apiBaseUrl = 'https://api.coingecko.com/api/v3';
 const marketsUrl = `${apiBaseUrl}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h`;
@@ -18,6 +19,7 @@ async function startApp() {
         document.documentElement.classList.remove('dark');
     }
     
+    addEventListeners();
     await getGlobalData();
     displayGlobalStats();
 
@@ -76,9 +78,7 @@ function displayCoinsTable() {
                     </span>
                 </td>
                 <td class="p-6">
-                    <div class="w-24 h-10 mx-auto">
-                        ${getSparklineSvg(coin.sparkline_in_7d.price, up)}
-                    </div>
+                    <div class="w-24 h-10 mx-auto">${getSparklineSvg(coin.sparkline_in_7d.price, up)}</div>
                 </td>
                 <td class="p-6">
                     <div class="flex items-center justify-center gap-2">
@@ -94,26 +94,37 @@ function displayCoinsTable() {
     lucide.createIcons();
 }
 
+function runFilters() {
+    filteredList = coinsList.filter(function (item) {
+        const nameMatch = item.name.toLowerCase().includes(searchText);
+        const symbolMatch = item.symbol.toLowerCase().includes(searchText);
+        return nameMatch || symbolMatch;
+    });
+    displayCoinsTable();
+}
+
+function addEventListeners() {
+    const searchInput = document.getElementById('coin-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function (e) {
+            searchText = e.target.value.toLowerCase();
+            runFilters();
+        });
+    }
+}
+
 function getSparklineSvg(prices, up) {
     const minVal = Math.min(...prices);
     const maxVal = Math.max(...prices);
     let valRange = maxVal - minVal;
     if (valRange === 0) valRange = 1;
-
     let pathPoints = '';
     for (let i = 0; i < prices.length; i++) {
         const x = (i / (prices.length - 1)) * 100;
         const y = 40 - ((prices[i] - minVal) / valRange) * 40;
         pathPoints += `${x},${y} `;
     }
-
-    const strokeColor = up ? '#0ECB81' : '#F6465D';
-
-    return `
-        <svg viewBox="0 0 100 40" class="overflow-visible">
-            <polyline fill="none" stroke="${strokeColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${pathPoints}" />
-        </svg>
-    `;
+    return `<svg viewBox="0 0 100 40" class="overflow-visible"><polyline fill="none" stroke="${up ? '#0ECB81' : '#F6465D'}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${pathPoints}" /></svg>`;
 }
 
 function getPriceString(p) {
@@ -138,13 +149,10 @@ function displayGlobalStats() {
         <div class="glass p-6 rounded-[32px] border border-slate-200/50 dark:border-slate-800/50 hover:scale-[1.03] transition-all group">
             <div class="flex justify-between items-start mb-4">
                 <p class="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider">${s.title}</p>
-                <div class="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 ${s.color} transition-all shadow-sm">
-                    <i data-lucide="${s.icon}" class="w-5 h-5"></i>
-                </div>
+                <div class="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 ${s.color} transition-all shadow-sm"><i data-lucide="${s.icon}" class="w-5 h-5"></i></div>
             </div>
             <h3 class="text-3xl font-black text-slate-900 dark:text-white font-mono">${s.val}</h3>
-        </div>
-        `;
+        </div>`;
     }
     statsGrid.innerHTML = htmlContent;
     lucide.createIcons();

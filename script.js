@@ -1,5 +1,6 @@
 let coinsList = [];
 let filteredList = [];
+let compareList = [];
 let globalStats = null;
 let currentTheme = localStorage.getItem('crypto_theme') || 'dark';
 let searchText = '';
@@ -38,7 +39,7 @@ function switchView(hash) {
     views.forEach(v => {
         const el = document.getElementById(`view-${v}`);
         if (el) el.classList.add('hidden');
-        const nav = document.getElementById(`nav-${v}`);
+        const nav = document.getElementById(`nav-${navId(v)}`);
         if (nav) nav.classList.remove('active', 'text-slate-900', 'dark:text-white');
     });
 
@@ -51,6 +52,8 @@ function switchView(hash) {
     const targetNav = document.getElementById(`nav-${target}`);
     if (targetNav) targetNav.classList.add('active', 'text-slate-900', 'dark:text-white');
 }
+
+function navId(v) { return v; }
 
 async function getGlobalData() {
     try {
@@ -109,6 +112,9 @@ function displayCoinsTable() {
                 </td>
                 <td class="p-6">
                     <div class="flex items-center justify-center gap-2">
+                        <button onclick="handleCompareClick('${coin.id}')" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm" title="Compare">
+                            <i data-lucide="repeat" class="w-5 h-5"></i>
+                        </button>
                         <button class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400">
                             <i data-lucide="star" class="w-5 h-5"></i>
                         </button>
@@ -118,6 +124,27 @@ function displayCoinsTable() {
     }
     tableBody.innerHTML = rowsHtml;
     lucide.createIcons();
+}
+
+function handleCompareClick(coinId) {
+    const coin = coinsList.find(c => c.id === coinId);
+    if (!coin) return;
+
+    if (compareList.find(c => c.id === coinId)) {
+        alert('Coin already in comparison');
+        return;
+    }
+
+    if (compareList.length >= 2) {
+        alert('Limit reached: You can only compare 2 coins');
+        return;
+    }
+
+    compareList.push(coin);
+    alert(`${coin.name} added to comparison`);
+    if (compareList.length === 1) {
+        window.location.hash = '#/compare';
+    }
 }
 
 function updatePaginationUI() {

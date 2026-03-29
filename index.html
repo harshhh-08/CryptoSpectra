@@ -118,7 +118,26 @@
                 <h2 class="text-4xl font-extrabold text-slate-900 dark:text-white mb-2 font-orbitron">Compare Assets</h2>
                 <p class="text-slate-500 dark:text-slate-400 font-medium">Detailed side-by-side performance analysis.</p>
             </header>
-            <div id="comparison-slots" class="grid grid-cols-1 lg:grid-cols-2 gap-10 min-h-[500px]"></div>
+            <div id="comparison-slots" class="grid grid-cols-1 lg:grid-cols-2 gap-10 min-h-[500px]">
+                <div class="glass rounded-[40px] border-2 border-dashed border-slate-300 dark:border-[#2B3139] flex items-center justify-center p-12 transition-all hover:border-slate-400 group relative overflow-hidden" id="compare-slot-0">
+                    <div class="text-center group-hover:scale-110 transition-transform">
+                        <div class="bg-slate-200/50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="plus" class="w-10 h-10 text-slate-500"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Primary Asset</h3>
+                        <p class="text-slate-500 text-sm">Select a coin from the dashboard</p>
+                    </div>
+                </div>
+                <div class="glass rounded-[40px] border-2 border-dashed border-slate-300 dark:border-[#2B3139] flex items-center justify-center p-12 transition-all hover:border-slate-400 group relative overflow-hidden" id="compare-slot-1">
+                    <div class="text-center group-hover:scale-110 transition-transform">
+                        <div class="bg-slate-200/50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="plus" class="w-10 h-10 text-slate-500"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Secondary Asset</h3>
+                        <p class="text-slate-500 text-sm">Select a second coin to compare</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="view-favorites" class="hidden animate-in space-y-10">

@@ -1,6 +1,7 @@
 let coinsList = [];
 let filteredList = [];
 let compareList = [];
+let favList = JSON.parse(localStorage.getItem('crypto_favs') || '[]');
 let globalStats = null;
 let currentTheme = localStorage.getItem('crypto_theme') || 'dark';
 let searchText = '';
@@ -48,7 +49,10 @@ function switchView(hash) {
         target = 'compare';
         renderComparison();
     }
-    if (hash === '#/favorites') target = 'favorites';
+    if (hash === '#/favorites') {
+        target = 'favorites';
+        renderFavorites();
+    }
 
     const targetEl = document.getElementById(`view-${target}`);
     if (targetEl) targetEl.classList.remove('hidden');
@@ -77,7 +81,7 @@ async function getCoinsByPage(page) {
         displayCoinsTable();
         updatePaginationUI();
     } catch (err) {
-        console.log('Error fetching coins:', err);
+        console.log('Error:', err);
     }
 }
 
@@ -87,6 +91,7 @@ function displayCoinsTable() {
     let rowsHtml = '';
     for (let i = 0; i < filteredList.length; i++) {
         let coin = filteredList[i];
+        const isFav = favList.includes(coin.id);
         const percentChange = coin.price_change_percentage_24h || 0;
         const up = percentChange >= 0;
         rowsHtml += `
@@ -116,14 +121,53 @@ function displayCoinsTable() {
                         <button onclick="handleCompareClick('${coin.id}')" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm" title="Compare">
                             <i data-lucide="repeat" class="w-5 h-5"></i>
                         </button>
-                        <button class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400">
-                            <i data-lucide="star" class="w-5 h-5"></i>
+                        <button onclick="toggleFavorite('${coin.id}')" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 ${isFav ? 'text-yellow-500 fill-yellow-500' : 'text-slate-400'} hover:scale-110 transition-all shadow-sm">
+                            <i data-lucide="star" class="w-5 h-5 ${isFav ? 'fill-yellow-500' : ''}"></i>
                         </button>
                     </div>
                 </td>
             </tr>`;
     }
     tableBody.innerHTML = rowsHtml;
+    lucide.createIcons();
+}
+
+function toggleFavorite(id) {
+    if (favList.includes(id)) {
+        favList = favList.filter(f => f !== id);
+    } else {
+        favList.push(id);
+    }
+    localStorage.setItem('crypto_favs', JSON.stringify(favList));
+    displayCoinsTable();
+    renderFavorites();
+}
+
+function renderFavorites() {
+    const grid = document.getElementById('favorites-grid');
+    if (!grid) return;
+    if (favList.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500 font-medium">No favorites yet. Go to Dashboard and click the star icon!</div>`;
+        return;
+    }
+    const favCoins = coinsList.filter(c => favList.includes(c.id));
+    let html = '';
+    favCoins.forEach(coin => {
+        const up = coin.price_change_percentage_24h >= 0;
+        html += `
+            <div class="glass p-6 rounded-[32px] border relative group animate-in">
+                <button onclick="toggleFavorite('${coin.id}')" class="absolute top-4 right-4 text-yellow-500 hover:scale-125 transition-all"><i data-lucide="star" class="w-6 h-6 fill-yellow-500"></i></button>
+                <div class="flex items-center gap-4 mb-6">
+                    <img src="${coin.image}" class="w-12 h-12 rounded-2xl" alt="${coin.name}">
+                    <div><h3 class="font-black text-slate-900 dark:text-white">${coin.name}</h3><p class="text-xs text-slate-500 uppercase font-bold font-mono">${coin.symbol}</p></div>
+                </div>
+                <div class="space-y-4">
+                    <div><p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Price</p><p class="text-2xl font-black text-slate-900 dark:text-white font-mono">$${getPriceString(coin.current_price)}</p></div>
+                    <div class="flex justify-between items-end"><div class="font-black ${up ? 'text-secondary' : 'text-danger'} font-mono">${coin.price_change_percentage_24h.toFixed(2)}%</div><div class="w-20 h-8">${getSparklineSvg(coin.sparkline_in_7d.price, up)}</div></div>
+                </div>
+            </div>`;
+    });
+    grid.innerHTML = html;
     lucide.createIcons();
 }
 
@@ -148,7 +192,7 @@ function renderComparison() {
                 <button onclick="removeCompare(${i})" class="absolute top-6 right-6 p-2 rounded-xl bg-white dark:bg-slate-800 text-danger opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
-                <div class="w-full space-y-8 animate-in">
+                <div class="w-full space-y-8 animate-in text-left">
                     <div class="flex items-center gap-6">
                         <img src="${coin.image}" class="w-24 h-24 rounded-[32px] p-1 border shadow-2xl" alt="${coin.name}">
                         <div>
@@ -160,22 +204,11 @@ function renderComparison() {
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-slate-50/50 dark:bg-slate-900/50 p-6 rounded-3xl border">
-                            <p class="text-xs font-black text-slate-400 uppercase mb-2">Price</p>
-                            <p class="text-2xl font-black text-slate-900 dark:text-white font-mono">$${getPriceString(coin.current_price)}</p>
-                        </div>
-                        <div class="bg-slate-50/50 dark:bg-slate-900/50 p-6 rounded-3xl border">
-                            <p class="text-xs font-black text-slate-400 uppercase mb-2">24h Change</p>
-                            <p class="text-2xl font-black ${up ? 'text-secondary' : 'text-danger'} font-mono">${coin.price_change_percentage_24h.toFixed(2)}%</p>
-                        </div>
+                        <div class="glass p-6 rounded-3xl border"><p class="text-xs font-black text-slate-400 uppercase mb-2">Price</p><p class="text-2xl font-black text-slate-900 dark:text-white font-mono">$${getPriceString(coin.current_price)}</p></div>
+                        <div class="glass p-6 rounded-3xl border"><p class="text-xs font-black text-slate-400 uppercase mb-2">24h Change</p><p class="text-2xl font-black ${up ? 'text-secondary' : 'text-danger'} font-mono">${coin.price_change_percentage_24h.toFixed(2)}%</p></div>
                     </div>
-                    <div class="bg-slate-50/50 dark:bg-slate-900/50 p-8 rounded-[40px] border">
-                        <p class="text-xs font-black text-slate-400 uppercase mb-4">Market Presence</p>
-                        <p class="text-3xl font-black text-slate-900 dark:text-white mb-1 font-mono">$${(coin.market_cap / 1e9).toFixed(2)}B</p>
-                        <p class="text-xs text-slate-500 font-bold">Market Cap Concentration</p>
-                    </div>
-                </div>
-            `;
+                    <div class="glass p-8 rounded-[40px] border"><p class="text-xs font-black text-slate-400 uppercase mb-4">Market Cap</p><p class="text-3xl font-black text-slate-900 dark:text-white mb-1 font-mono">$${(coin.market_cap / 1e9).toFixed(2)}B</p></div>
+                </div>`;
             slot.classList.remove('border-dashed');
             slot.classList.add('border-solid');
         } else {

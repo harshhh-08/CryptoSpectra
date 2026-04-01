@@ -74,11 +74,14 @@ function switchView(hash) {
 async function getGlobalData() {
     try {
         const res = await fetch(globalUrl);
+        if (!res.ok) throw new Error('Global API failure');
         const json = await res.json();
         globalStats = json.data;
         displayGlobalStats();
     } catch (err) {
-        console.log('Error:', err);
+        console.error('Error fetching global data:', err);
+        const grid = document.getElementById('global-stats-grid');
+        if (grid) grid.innerHTML = `<div class="col-span-full py-4 text-center text-danger font-bold">Failed to load global market stats. API may be rate limited.</div>`;
     }
 }
 
@@ -86,6 +89,7 @@ async function getCoinsByPage(page) {
     try {
         const url = `${apiBaseUrl}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=${page}&sparkline=true&price_change_percentage=24h`;
         const res = await fetch(url);
+        if (!res.ok) throw new Error('Markets API failure');
         const data = await res.json();
         coinsList = data;
         filteredList = [...data];
@@ -93,7 +97,11 @@ async function getCoinsByPage(page) {
         updatePaginationUI();
         if (window.location.hash === '#/favorites') renderFavorites();
     } catch (err) {
-        console.log('Error:', err);
+        console.error('Error fetching coins:', err);
+        const tableBody = document.getElementById('coin-table-body');
+        if (tableBody) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-danger font-black text-xl">Connection Error: Failed to fetch market data.<br><span class="text-sm font-bold opacity-60">Please check your internet or try again later.</span></td></tr>`;
+        }
     }
 }
 
